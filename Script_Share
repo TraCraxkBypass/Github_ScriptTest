@@ -3,47 +3,108 @@ local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso
 local PrefabsId = `rbxassetid://{ReGui.PrefabsId}`
 
 ReGui:Init({
-	Prefabs = game:GetService("InsertService"):LoadLocalAsset(PrefabsId)
+    Prefabs = game:GetService("InsertService"):LoadLocalAsset(PrefabsId)
 })
 
--- // Script Function
-local Player = game.Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+-- // Global Variables
+_G.BlurAmount = 15
+_G.BlurEffect = Instance.new("BlurEffect", game.Lighting)
+_G.BlurEffect.Size = _G.BlurAmount
 
--- // Window
+_G.SunFlare = Instance.new("SunRaysEffect", game.Lighting)
+_G.SunFlare.Intensity = 0.059
+_G.SunFlare.Spread = 0.356
+
+_G.ColorCorrection = Instance.new("ColorCorrectionEffect", game.Lighting)
+_G.ColorCorrection.TintColor = Color3.new(1, 1, 1) -- Default putih
+
+-- // Shader Functions
+local function normalshader()
+    _G.ColorCorrection.TintColor = Color3.new(1, 1, 1) -- Putih normal
+end
+
+local function pinkshader()
+    _G.ColorCorrection.TintColor = Color3.new(1, 0.5, 0.8) -- Warna pink
+end
+
+-- // Motion Blur Script
+local function motionBlurScript()
+    local Camera = game.Workspace.CurrentCamera
+    local Last = Camera.CFrame.lookVector
+
+    game:GetService("RunService").Heartbeat:Connect(function()
+        if not _G.BlurEffect or _G.BlurEffect.Parent == nil then
+            _G.BlurEffect = Instance.new("BlurEffect", game.Lighting)
+        end
+        
+        local magnitude = (Camera.CFrame.lookVector - Last).magnitude
+        _G.BlurEffect.Size = math.abs(magnitude) * _G.BlurAmount
+        Last = Camera.CFrame.lookVector
+    end)
+end
+
+-- Jalankan Motion Blur Script
+motionBlurScript()
+
+-- // Window GUI
 local Window = ReGui:Window({
-	Title = "RNG Anime Girl [Beta]",
-	Size = UDim2.fromOffset(300, 200)
+    Title = "LunaRay",
+    Size = UDim2.fromOffset(300, 150) -- Tambah ukuran agar muat 2 tombol sejajar
 })
 
--- // Main
-Window:Label({Text="Main"})
-Window:Label({Text="Sell"})
+Window:Label({Text="Shader"})
+
+-- Tombol Normal
 Window:Button({
-	Text = "Sell All",
-	Callback = function()
-		game:GatService("ReplicatedStorage")WaitForChild("CORE_RemoteEvents"):WaitForChild("SendSellRequrest"):FireServer("sell_all")
-	end,
+    Text = "Normal",
+    Callback = function()
+        normalshader()
+    end,
 })
 
--- // Teleport
-Window:Label({Text="Teleport"})
-Window:Label({Text="Crystal Caves"})
+-- Tombol Pink
 Window:Button({
-	Text = "Crystal Caves",
-	Callback = function()
-		HumanoidRootPart.CFrame = CFrame.new(Vector3.new(140, -85, -265))
-	end,
+    Text = "Pink",
+    Callback = function()
+        pinkshader()
+    end,
 })
-Window:Label({Text="Flooded Caves"})
-Window:Button({
-	Text = "Flooded Caves",
-	Callback = function()
-		HumanoidRootPart.CFrame = CFrame.new(Vector3.new(150, -87, 10))
-		wait(1)
-		HumanoidRootPart.CFrame = CFrame.new(Vector3.new(20, -88, -25))
-		wait(1)
-		HumanoidRootPart.CFrame = CFrame.new(Vector3.new(170, -85, -62.5))
-	end,
+
+Window:Label({Text="Shader Config"})
+
+Window:SliderInt({
+    Label = "Motion Blur",
+    Value = _G.BlurAmount,
+    Minimum = 1,
+    Maximum = 20,
+    Callback = function(value)
+        _G.BlurAmount = value
+        if _G.BlurEffect then
+            _G.BlurEffect.Size = value
+        end
+    end
+})
+
+Window:SliderFloat({
+    Label = "Sun Rays Effect [Intensity]",
+    Value = _G.SunFlare.Intensity,
+    Minimum = 0,
+    Maximum = 1,
+    Callback = function(value)
+        if _G.SunFlare then
+            _G.SunFlare.Intensity = value
+        end
+    end
+})
+
+Window:SliderFloat({
+    Label = "Sun Rays Effect [Spread]",
+    Value = _G.SunFlare.Spread,
+    Minimum = 0,
+    Maximum = 1,
+    Callback = function(value)
+        if _G.SunFlare then
+            _G.SunFlare.Spread = value
+        end
+    end
 })
