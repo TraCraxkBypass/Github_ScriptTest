@@ -18,13 +18,50 @@ _G.SunFlare.Spread = 0.356
 _G.ColorCorrection = Instance.new("ColorCorrectionEffect", game.Lighting)
 _G.ColorCorrection.TintColor = Color3.new(1, 1, 1) -- Default putih
 
--- // Shader Functions
-local function normalshader()
-    _G.ColorCorrection.TintColor = Color3.new(1, 1, 1) -- Putih normal
-end
+-- // Fungsi Shader dari CloudyV2
+local function applyShader(mode)
+    local Lighting = game:GetService("Lighting")
 
-local function pinkshader()
-    _G.ColorCorrection.TintColor = Color3.new(1, 0.5, 0.8) -- Warna pink
+    -- Reset efek sebelum mengaktifkan shader baru
+    Lighting:ClearAllChildren()
+
+    -- Efek shader dari CloudyV2
+    if mode == "Normal" then
+        Lighting.Brightness = 1.2
+        Lighting.OutdoorAmbient = Color3.fromRGB(139, 139, 139)
+        Lighting.Ambient = Color3.fromRGB(2, 2, 2)
+        _G.ColorCorrection.TintColor = Color3.new(1, 1, 1)
+    elseif mode == "Pink" then
+        Lighting.Brightness = 1.5
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 198, 250)
+        Lighting.Ambient = Color3.fromRGB(255, 198, 250)
+        _G.ColorCorrection.TintColor = Color3.new(1, 0.5, 0.8) -- Pink
+    end
+
+    -- Tambahkan efek
+    local SunFlare = Instance.new("SunRaysEffect", Lighting)
+    SunFlare.Intensity = _G.SunFlare.Intensity
+    SunFlare.Spread = _G.SunFlare.Spread
+
+    local Blur = Instance.new("BlurEffect", Lighting)
+    Blur.Size = _G.BlurAmount
+
+    local Sky = Instance.new("Sky", Lighting)
+    if mode == "Normal" then
+        Sky.SkyboxBk = "rbxassetid://150335574"
+        Sky.SkyboxDn = "rbxassetid://150335585"
+        Sky.SkyboxFt = "rbxassetid://150335628"
+        Sky.SkyboxLf = "rbxassetid://150335620"
+        Sky.SkyboxRt = "rbxassetid://150335610"
+        Sky.SkyboxUp = "rbxassetid://150335642"
+    elseif mode == "Pink" then
+        Sky.SkyboxBk = "rbxassetid://271042516"
+        Sky.SkyboxDn = "rbxassetid://271077243"
+        Sky.SkyboxFt = "rbxassetid://271042556"
+        Sky.SkyboxLf = "rbxassetid://271042310"
+        Sky.SkyboxRt = "rbxassetid://271042467"
+        Sky.SkyboxUp = "rbxassetid://271077958"
+    end
 end
 
 -- // Motion Blur Script
@@ -49,7 +86,7 @@ motionBlurScript()
 -- // Window GUI
 local Window = ReGui:Window({
     Title = "LunaRay",
-    Size = UDim2.fromOffset(300, 150) -- Tambah ukuran agar muat 2 tombol sejajar
+    Size = UDim2.fromOffset(300, 150)
 })
 
 Window:Label({Text="Shader"})
@@ -58,7 +95,7 @@ Window:Label({Text="Shader"})
 Window:Button({
     Text = "Normal",
     Callback = function()
-        normalshader()
+        applyShader("Normal")
     end,
 })
 
@@ -66,7 +103,7 @@ Window:Button({
 Window:Button({
     Text = "Pink",
     Callback = function()
-        pinkshader()
+        applyShader("Pink")
     end,
 })
 
@@ -86,7 +123,7 @@ Window:SliderInt({
 })
 
 Window:SliderFloat({
-    Label = "Sun Rays Effect [Intensity]",
+    Label = "SunRays [Intensity]",
     Value = _G.SunFlare.Intensity,
     Minimum = 0,
     Maximum = 1,
@@ -98,7 +135,7 @@ Window:SliderFloat({
 })
 
 Window:SliderFloat({
-    Label = "Sun Rays Effect [Spread]",
+    Label = "SunRays [Spread]",
     Value = _G.SunFlare.Spread,
     Minimum = 0,
     Maximum = 1,
