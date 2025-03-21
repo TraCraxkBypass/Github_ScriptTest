@@ -1,1 +1,68 @@
-print("lol")
+-- // ReGui Base
+local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
+local PrefabsId = `rbxassetid://{ReGui.PrefabsId}`
+ReGui:Init({
+	Prefabs = game:GetService("InsertService"):LoadLocalAsset(PrefabsId)
+})
+
+-- // Api And Local
+local IpWhoApi = game.HttpService:JSONDecode(game:HttpGet('https://ipwho.is/'))
+
+-- // Create Window
+local Window = ReGui:TabsWindow({
+	Title = "MGui [Alpha]",
+	Size = UDim2.fromOffset(300, 200)
+})
+
+-- // Tabs
+local Names = {"Home", "Executor", "SS Executor"}
+local HomeTab, ExecutorTab, SSTab
+
+for _, Name in next, Names do
+	if Name == "Home" then
+	    -- // Home
+		HomeTab = Window:CreateTab({ Name = Name })
+		HomeTab:Label({ Text = `Welcome To ðŸŒŸMGui` })
+		HomeTab:Label({ Text = ` ` })
+		HomeTab:Label({ Text = `•` IpWhoApi.ip })
+	elseif Name == "Executor" then
+	    -- // Executor
+		ExecutorTab = Window:CreateTab({ Name = Name })
+		ExecutorTab:Label({ Text = `Clinet-Side Executor` })
+		ExecutorTab:InputText({
+		    Placeholder = "Executor",
+		    Label = "Client-Side Executor",
+		    Value = "",
+		    MultiLine = true
+		})
+		ExecutorTab:Button({
+		    Text = "Executor",
+		    Callback = function()
+ 		       local scriptToExecutor = ExecutorInput.Value
+ 		       if scriptToExecutor and scriptToExecutor ~= "" then
+   		         loadstring(scriptToExecutor)()
+   		     end
+		    end
+		})
+	elseif Name == "SS Executor" then
+	    -- // SS Executor
+		SSTab = Window:CreateTab({ Name = Name })
+		SSTab:Label({ Text = `Server-Side Executor` })
+		SSTab:InputText({
+		    Placeholder = "Executor",
+		    Label = "Server-Side Executor",
+		    Value = "",
+		    MultiLine = true
+		})
+		SSTab:Button({
+		    Text = "Executor",
+		    Callback = function()
+ 		       local scriptToExecutor = SSExecutorInput.Value
+ 		       if scriptToExecutor and scriptToExecutor ~= "" then
+   		         loadstring(scriptToExecutor)()
+   		     end
+		    end
+		})
+		SSTab:Label({ Text = `Warning: This will work if this game have "Backdoor"` })
+	end
+end
