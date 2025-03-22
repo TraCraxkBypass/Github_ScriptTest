@@ -1,147 +1,100 @@
--- // ReGui Base
-local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
-local PrefabsId = `rbxassetid://{ReGui.PrefabsId}`
+print("Load Demon Slayer Animation [Beta]")
 
-ReGui:Init({
-    Prefabs = game:GetService("InsertService"):LoadLocalAsset(PrefabsId)
-})
+local player = game.Players.LocalPlayer
 
--- // Global Variables
-_G.BlurAmount = 15
-_G.BlurEffect = Instance.new("BlurEffect", game.Lighting)
-_G.BlurEffect.Size = _G.BlurAmount
+-- 🔹 Reset karakter sebelum script berjalan
+player.Character:BreakJoints()
+wait(1) -- Tunggu agar karakter respawn
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:FindFirstChildOfClass("Humanoid")
+local rootPart = character:FindFirstChild("HumanoidRootPart")
+local rightArm = character:FindFirstChild("Right Arm")
+local leftArm = character:FindFirstChild("Left Arm")
+local mouse = player:GetMouse()
 
-_G.SunFlare = Instance.new("SunRaysEffect", game.Lighting)
-_G.SunFlare.Intensity = 0.059
-_G.SunFlare.Spread = 0.356
+local hasWeapon = false
+local weaponTool = nil
 
-_G.ColorCorrection = Instance.new("ColorCorrectionEffect", game.Lighting)
-_G.ColorCorrection.TintColor = Color3.new(1, 1, 1) -- Default putih
-
--- // Fungsi Shader dari CloudyV2
-local function applyShader(mode)
-    local Lighting = game:GetService("Lighting")
-
-    -- Reset efek sebelum mengaktifkan shader baru
-    Lighting:ClearAllChildren()
-
-    -- Efek shader dari CloudyV2
-    if mode == "Normal" then
-        Lighting.Brightness = 1.2
-        Lighting.OutdoorAmbient = Color3.fromRGB(139, 139, 139)
-        Lighting.Ambient = Color3.fromRGB(2, 2, 2)
-        _G.ColorCorrection.TintColor = Color3.new(1, 1, 1)
-    elseif mode == "Pink" then
-        Lighting.Brightness = 1.5
-        Lighting.OutdoorAmbient = Color3.fromRGB(255, 198, 250)
-        Lighting.Ambient = Color3.fromRGB(255, 198, 250)
-        _G.ColorCorrection.TintColor = Color3.new(1, 0.5, 0.8) -- Pink
-    end
-
-    -- Tambahkan efek
-    local SunFlare = Instance.new("SunRaysEffect", Lighting)
-    SunFlare.Intensity = _G.SunFlare.Intensity
-    SunFlare.Spread = _G.SunFlare.Spread
-
-    local Blur = Instance.new("BlurEffect", Lighting)
-    Blur.Size = _G.BlurAmount
-
-    local Sky = Instance.new("Sky", Lighting)
-    if mode == "Normal" then
-        Sky.SkyboxBk = "rbxassetid://150335574"
-        Sky.SkyboxDn = "rbxassetid://150335585"
-        Sky.SkyboxFt = "rbxassetid://150335628"
-        Sky.SkyboxLf = "rbxassetid://150335620"
-        Sky.SkyboxRt = "rbxassetid://150335610"
-        Sky.SkyboxUp = "rbxassetid://150335642"
-    elseif mode == "Pink" then
-        Sky.SkyboxBk = "rbxassetid://271042516"
-        Sky.SkyboxDn = "rbxassetid://271077243"
-        Sky.SkyboxFt = "rbxassetid://271042556"
-        Sky.SkyboxLf = "rbxassetid://271042310"
-        Sky.SkyboxRt = "rbxassetid://271042467"
-        Sky.SkyboxUp = "rbxassetid://271077958"
+-- 🔹 Cek apakah pemain memiliki pedang
+for _, item in pairs(player.Backpack:GetChildren()) do
+    if item:IsA("Tool") then
+        hasWeapon = true
+        weaponTool = item
+        break
     end
 end
 
--- // Motion Blur Script
-local function motionBlurScript()
-    local Camera = game.Workspace.CurrentCamera
-    local Last = Camera.CFrame.lookVector
+if hasWeapon then
+    -- Jika ada pedang, equip pedang
+    weaponTool.Parent = character
+    print("Menggunakan pedang:", weaponTool.Name)
+else
+    print("Tidak ada pedang, membuat pedang virtual...")
 
-    game:GetService("RunService").Heartbeat:Connect(function()
-        if not _G.BlurEffect or _G.BlurEffect.Parent == nil then
-            _G.BlurEffect = Instance.new("BlurEffect", game.Lighting)
-        end
-        
-        local magnitude = (Camera.CFrame.lookVector - Last).magnitude
-        _G.BlurEffect.Size = math.abs(magnitude) * _G.BlurAmount
-        Last = Camera.CFrame.lookVector
-    end)
+    -- 🔹 Buat pedang virtual dengan transparansi 0.5
+    local fakeSword = Instance.new("Part")
+    fakeSword.Size = Vector3.new(0.2, 4, 0.5)
+    fakeSword.Material = Enum.Material.Metal
+    fakeSword.BrickColor = BrickColor.new("Really black")
+    fakeSword.CanCollide = false
+    fakeSword.Anchored = false
+    fakeSword.Transparency = 0.5 -- 🔹 Pedang semi-invisible
+    fakeSword.Name = "FakeSword"
+
+    -- Weld pedang ke tangan kanan
+    local weld = Instance.new("Weld")
+    weld.Part0 = rightArm
+    weld.Part1 = fakeSword
+    weld.C0 = CFrame.new(0, -1, 0) * CFrame.Angles(math.rad(90), 0, 0)
+    weld.Parent = fakeSword
+
+    fakeSword.Parent = character
 end
 
--- Jalankan Motion Blur Script
-motionBlurScript()
-
--- // Window GUI
-local Window = ReGui:Window({
-    Title = "LunaRay",
-    Size = UDim2.fromOffset(300, 150)
-})
-
-Window:Label({Text="Shader"})
-
--- Tombol Normal
-Window:Button({
-    Text = "Normal",
-    Callback = function()
-        applyShader("Normal")
-    end,
-})
-
--- Tombol Pink
-Window:Button({
-    Text = "Pink",
-    Callback = function()
-        applyShader("Pink")
-    end,
-})
-
-Window:Label({Text="Shader Config"})
-
-Window:SliderInt({
-    Label = "Motion Blur",
-    Value = _G.BlurAmount,
-    Minimum = 1,
-    Maximum = 20,
-    Callback = function(value)
-        _G.BlurAmount = value
-        if _G.BlurEffect then
-            _G.BlurEffect.Size = value
-        end
+-- 🔹 Animasi stance Demon Slayer
+local function DemonSlayerStance()
+    attack = true
+    for i = 0, 1, 0.1 do
+        wait()
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(-5), 0) -- Sedikit miring untuk stance
+        rightArm.CFrame = rootPart.CFrame * CFrame.new(1.2, 0.5, -0.5) * CFrame.Angles(math.rad(110), 0, math.rad(-30))
+        leftArm.CFrame = rootPart.CFrame * CFrame.new(-1.2, 0.5, -0.3) * CFrame.Angles(math.rad(120), 0, math.rad(30))
     end
-})
+    attack = false
+end
 
-Window:SliderFloat({
-    Label = "SunRays [Intensity]",
-    Value = _G.SunFlare.Intensity,
-    Minimum = 0,
-    Maximum = 1,
-    Callback = function(value)
-        if _G.SunFlare then
-            _G.SunFlare.Intensity = value
-        end
-    end
-})
+-- 🔹 Animasi serangan Demon Slayer (klik kiri)
+local function DemonSlayerAttack()
+    if attack then return end -- Cegah spam serangan
+    attack = true
 
-Window:SliderFloat({
-    Label = "SunRays [Spread]",
-    Value = _G.SunFlare.Spread,
-    Minimum = 0,
-    Maximum = 1,
-    Callback = function(value)
-        if _G.SunFlare then
-            _G.SunFlare.Spread = value
-        end
+    for i = 0, 1, 0.15 do
+        wait()
+        rightArm.CFrame = rootPart.CFrame * CFrame.new(1.2, 0.5, -0.5) * CFrame.Angles(math.rad(200), 0, math.rad(-30))
+        leftArm.CFrame = rootPart.CFrame * CFrame.new(-1.2, 0.5, -0.3) * CFrame.Angles(math.rad(80), 0, math.rad(30))
     end
-})
+
+    print("Serangan dilakukan!")
+
+    -- 🔹 Efek tebasan biru (Water Breathing)
+    local slashEffect = Instance.new("Part")
+    slashEffect.Size = Vector3.new(3, 1, 6)
+    slashEffect.Material = Enum.Material.Neon
+    slashEffect.BrickColor = BrickColor.new("Bright blue")
+    slashEffect.Transparency = 0.3
+    slashEffect.CanCollide = false
+    slashEffect.Anchored = true
+    slashEffect.CFrame = rightArm.CFrame * CFrame.new(0, -2, -3) * CFrame.Angles(math.rad(90), 0, 0)
+    slashEffect.Parent = workspace
+
+    game:GetService("Debris"):AddItem(slashEffect, 0.3) -- Hapus efek setelah 0.3 detik
+
+    wait(0.3) -- Delay antara serangan
+    attack = false
+end
+
+-- 🔹 Jalankan animasi stance otomatis setelah reset
+DemonSlayerStance()
+
+-- 🔹 Klik kiri untuk menyerang
+mouse.Button1Down:Connect(DemonSlayerAttack)
